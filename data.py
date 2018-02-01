@@ -28,23 +28,6 @@ def fetch_data():
         # data = json.load(open(json_local_path))
     return
 
-def update_data():
-    for c in DATA_FILES:
-        csv_file = parse.urljoin(DATA_PATH, c)
-
-        csvRows = []
-        with open(csv_file, "r") as csv_obj:
-            reader = csv.reader(csv_obj)
-            for row in reader:
-                if reader.line_num == 1:
-                    continue
-                entry = dict(zip(DATA_HEADERS, row))
-                csvRows.append(entry)
-
-        for row in csvRows:
-            print(row)
-
 
 if __name__ == '__main__':
     fetch_data()
-    # update_data()
