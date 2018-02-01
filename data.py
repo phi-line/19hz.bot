@@ -3,26 +3,26 @@ import requests
 from urllib import parse
 
 DATA_PATH = 'data/'  # local path
-DATA_URL = ''
-DATA_CSV = ['events_BayArea.csv']  # filename
+DATA_URL = 'https://19hz.info/' # online base
+DATA_FILES = ['events_BayArea.csv']  # filename
 DATA_HEADERS = ["date", "name", "genre", 'location', 'time', 'price',
                 'ages', 'promoter', 'url1', 'url2', 'datetime']
 
 def fetch_data():
-    CSV_URL = 'http://samplecsvs.s3.amazonaws.com/Sacramentorealestatetransactions.csv'
+    for u in DATA_FILES:
+        csv_url = parse.urljoin(DATA_PATH, u)
+        with requests.Session() as s:
+            download = s.get(csv_url)
 
-    with requests.Session() as s:
-        download = s.get(CSV_URL)
+            decoded_content = download.content.decode('utf-8')
 
-        decoded_content = download.content.decode('utf-8')
-
-        cr = csv.reader(decoded_content.splitlines(), delimiter=',')
-        my_list = list(cr)
-        for row in my_list
+            cr = csv.reader(decoded_content.splitlines(), delimiter=',')
+            my_list = list(cr)
+            for row in my_list
     return
 
 def update_data():
-    for c in DATA_CSV:
+    for c in DATA_FILES:
         csv_file = parse.urljoin(DATA_PATH, c)
 
         csvRows = []
