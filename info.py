@@ -9,8 +9,10 @@ from random import randint
 from fuzzywuzzy import process
 import arrow
 
+
 def na(param):
     return param or "n/a"
+
 
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
@@ -18,11 +20,12 @@ class dotdict(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
-class color(object):
+
+class Color(object):
     LIST = [0xffd6d6, 0xffdfba, 0xffffba, 0xbaffc9, 0xbae1ff, 0xeccdfa]
+
     def __init__(self):
-        self.num, self.nums = 0, []
-        self.cur = 0
+        self.idx = 0
 
     def __iter__(self):
         return self
@@ -31,11 +34,43 @@ class color(object):
         return self.next()
 
     def next(self):
-        if self.num < len(color.LIST):
-            self.num += 1
-            return color.LIST[self.num-1]
-        else:
-            self.num = 0
+        self.idx += 1
+        if self.idx > len(Color.LIST)-1:
+            self.idx = 0
+        return Color.LIST[self.idx - 1]
+
+
+class Carousel(object):
+    def __init__(self, data_list):
+        self.idx = 0
+        self.data_list = data_list
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        self.idx += 1
+        if self.idx > len(self.data_list)-1:
+            self.idx = 0
+        return self.idx
+
+    def prev(self):
+        self.idx -= 1
+        if self.idx > 0:
+            self.idx = len(self.data_list)-1
+        return self.idx
+
+    def close(self):
+        raise StopIteration
+
+
+def newEmbed(data_list, idx: int, roygbiv):
+    e = discord.Embed(title=data_list[idx-1].name,
+                      url=(data_list[idx-1].url2 or data_list[idx-1].url1 or "19hz.info/#"),
+                      color=roygbiv.next())
+    e = Info.info_embed(e, data_list[idx - 1])
+    return e
+
 
 class Info():
     def __init__(self, bot):
@@ -48,7 +83,6 @@ class Info():
         Usage: !event [location]
         e.g:   !event Bay Area
         '''
-        # dump = api.fetch_data(''.join(args))
         concat = ''.join(args).lower()
 
         for k, v in c.DATA_ALIAS.items():
@@ -58,7 +92,9 @@ class Info():
 
         best = process.extractOne(concat, c.DATA_SHORT)
         if best[1] < .50:
-            Info.throw_error(best[0])
+            cities = ", ".join(c.DATA_SHORT)
+            text = "`{}` didn't match with anything\nTry one of these cities:\n`{}`".format(best[0], cities)
+            await self.bot.say(text)
             return
 
         dump = api.fetch_data(best[0])
@@ -66,34 +102,45 @@ class Info():
 
         utc = arrow.now('US/Pacific')
         today = utc.format('ddd: MMM D')
-        data_list = [x for x in dump if x['date'] == today]
-        roygbiv = color()
+        data_list = [dotdict(x) for x in dump if x['date'] == today]
 
-        msg = None
-        for data in data_list:
-            data = dotdict(data)
+        carousel = Carousel(data_list)
+        roygbiv = Color()
 
-            embed = discord.Embed(title=data.name,
-                                  url=(data.url2 or data.url1 or "19hz.info/#"),
-                                  color=roygbiv.next())
-            if data.url1 and data.url2:
-                embed.set_author(name=data.name, url=data.url1)
-                embed.title = "Extra Link"
-            embed = Info.info_embed(embed, data)
-            embed.set_footer(text="Powered by 19hz.info", icon_url=c.ICON_URL)
+        embed = newEmbed(data_list, 0, roygbiv)
 
-            if not msg:
-                instead = (best[0] != concat) and 'instead of `{}`'.format(concat) or ''
-                text = 'Fetching results for `{}`{}'.format(best[0], instead)
+        instead = (best[0] != concat) and 'instead of `{}`'.format(concat) or ''
+        text = 'Fetching results for `{}`{}'.format(best[0], instead)
 
-                msg = await self.bot.say(text, embed=embed)
-            else: await self.bot.edit_message(msg, embed=embed)
-            await asyncio.sleep(1)
+        msg = await self.bot.say(text, embed=embed)
+        await self.bot.add_reaction(msg, '◀')
+        await self.bot.add_reaction(msg, '⬇')
+        await self.bot.add_reaction(msg, '▶')
 
-        return
+        try:
+            while True:
+                res = await self.bot.wait_for_reaction(message=msg)
+                if res:
+                    if res.reaction.emoji == '◀':
+                        embed = newEmbed(data_list, carousel.prev(), roygbiv)
+                        await self.bot.edit_message(msg, embed=embed)
+                        await self.bot.remove_reaction(msg, '◀', res.user)
+                    if res.reaction.emoji == '▶' and res.user != self.bot.user:
+                        print(self.bot.user.name)
+                        embed = newEmbed(data_list, carousel.next(), roygbiv)
+                        await self.bot.edit_message(msg, embed=embed)
+                        await self.bot.remove_reaction(msg, '▶', res.user)
+                    elif res.reaction.emoji == '⬇':
+                        await self.bot.delete_message(msg)
+        except StopIteration:
+            return
 
     @staticmethod
     def info_embed(embed: discord.Embed, data):
+        if data.url1 and data.url2:
+            embed.set_author(name=data.name, url=data.url1)
+            embed.title = "Extra Link"
+
         genre = '`{}`'.format(na(data.genre))
         embed.add_field(name=":musical_note: __Genre(s)__", value=genre, inline=False)
 
@@ -102,13 +149,9 @@ class Info():
 
         info = 'Location: `{}`\nPrice: `{}`\nAges: `{}`'.format(na(data.location), na(data.price), na(data.ages))
         embed.add_field(name=":grey_question: __Info__", value=info, inline=True)
-        return embed
 
-    @classmethod
-    async def throw_error(self, best: str):
-        cities = ", ".join(c.DATA_SHORT)
-        text = "`{}` didn't match with anything\nTry one of these cities:\n`{}`".format(best, cities)
-        await self.bot.say(text)
+        embed.set_footer(text="Powered by 19hz.info", icon_url=c.ICON_URL)
+        return embed
 
 
 def setup(bot):
