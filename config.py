@@ -1,1 +1,2 @@
 IS_BOT = True
+COLOR = 0x483d8b

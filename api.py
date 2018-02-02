@@ -3,12 +3,12 @@ import requests
 from urllib import parse
 import json
 
-from data import config as c
+from data import _config as c
 
 def update_data():
     for u in c.DATA_FILES:
         csv_url = parse.urljoin(c.DATA_URL, u + '.csv')
-        json_local_path = parse.urljoin(c.DATA_PATH, u + '.json')
+        json_local_path = parse.urljoin(c.DATA_PATH, u[7:] + '.json')
 
         data = requests.get(csv_url)
 
@@ -33,4 +33,3 @@ def fetch_data(location):
 
 if __name__ == '__main__':
     update_data()
-    print(fetch_data(location="events_BayArea"))
