@@ -1,10 +1,10 @@
 import discord
+import asyncio
 from discord.ext import commands
 import api
-# from config import COLOR
 
 from random import randint
-from os.path import dirname
+import arrow
 
 # import maya
 
@@ -28,20 +28,33 @@ class Info():
         Usage: !event [location]
         e.g:   !event Bay Area
         '''
-        dump = api.fetch_data(args[0])
+        dump = api.fetch_data(''.join(args))
         random_num = randint(1, len(dump))
-        data = dotdict(dump[random_num])
 
-        r = lambda: randint(0, 255)
-        hexc = int('0x{:02X}{:02X}{:02X}'.format(r(), r(), r()), 16)
+        utc = arrow.now('US/Pacific')
+        today = utc.format('ddd: MMM D')
 
-        embed = discord.Embed(title=data.name, url=(data.url2 or data.url1 or "19hz.info/#"), color=hexc)
-        if data.url1 and data.url2:
-            embed.set_author(name=data.name, url=data.url1)
-            embed.title = "Extra Link"
-        embed = Info.info_embed(embed, data)
+        data_list = [x for x in dump if x['date'] == today]
 
-        return await self.bot.say(embed=embed)
+        msg = None
+        for data in data_list:
+            data = dotdict(data)
+
+            r = lambda: randint(0, 255)
+            hexc = int('0x{:02X}{:02X}{:02X}'.format(r(), r(), r()), 16)
+
+            embed = discord.Embed(title=data.name, url=(data.url2 or data.url1 or "19hz.info/#"), color=hexc)
+            if data.url1 and data.url2:
+                embed.set_author(name=data.name, url=data.url1)
+                embed.title = "Extra Link"
+            embed = Info.info_embed(embed, data)
+
+            if not msg:
+                msg = await self.bot.say(embed=embed)
+            else: await self.bot.edit_message(msg, embed=embed)
+            await asyncio.sleep(1)
+
+        return
 
     @staticmethod
     def info_embed(embed: discord.Embed, data):
