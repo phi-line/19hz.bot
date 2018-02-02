@@ -6,9 +6,9 @@ import json
 from data import _config as c
 
 def update_data():
-    for u in c.DATA_FILES:
+    for i,u in enumerate(c.DATA_FILES):
         csv_url = parse.urljoin(c.DATA_URL, u + '.csv')
-        json_local_path = parse.urljoin(c.DATA_PATH, u[7:] + '.json')
+        json_local_path = parse.urljoin(c.DATA_PATH, c.DATA_SHORT[i] + '.json')
 
         data = requests.get(csv_url)
 
