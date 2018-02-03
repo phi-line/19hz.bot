@@ -1,11 +1,10 @@
 import discord
-import asyncio
 from discord.ext import commands
 
+from urllib.parse import urlsplit
 from data import _config as c
 import api
 
-from random import randint
 from fuzzywuzzy import process
 import arrow
 
@@ -109,7 +108,7 @@ class Info():
 
         embed = newEmbed(data_list, 0, roygbiv)
 
-        instead = (best[0] != concat) and 'instead of `{}`'.format(concat) or ''
+        instead = (best[0] != concat) and ' instead of `{}`'.format(concat) or ''
         text = 'Fetching results for `{}`{}'.format(best[0], instead)
 
         msg = await self.bot.say(text, embed=embed)
@@ -126,29 +125,29 @@ class Info():
                         await self.bot.edit_message(msg, embed=embed)
                         await self.bot.remove_reaction(msg, '◀', res.user)
                     if res.reaction.emoji == '▶' and res.user != self.bot.user:
-                        print(self.bot.user.name)
                         embed = newEmbed(data_list, carousel.next(), roygbiv)
                         await self.bot.edit_message(msg, embed=embed)
                         await self.bot.remove_reaction(msg, '▶', res.user)
                     elif res.reaction.emoji == '⬇':
                         await self.bot.delete_message(msg)
-        except StopIteration:
+        except discord.HTTPException:
+            await self.bot.delete_message(msg)
             return
 
     @staticmethod
     def info_embed(embed: discord.Embed, data):
         if data.url1 and data.url2:
             embed.set_author(name=data.name, url=data.url1)
-            embed.title = "Extra Link"
-
-        genre = '`{}`'.format(na(data.genre))
-        embed.add_field(name=":musical_note: __Genre(s)__", value=genre, inline=False)
+            embed.title = "{0.scheme}://{0.netloc}/".format(urlsplit(data.url2))
 
         time = '{}\n`{}`'.format(na(data.date), na(data.time))
         embed.add_field(name=":alarm_clock: __Time__", value=time, inline=True)
 
+        genre = '`{}`'.format(na(data.genre))
+        embed.add_field(name=":musical_note: __Genre(s)__", value=genre, inline=True)
+
         info = 'Location: `{}`\nPrice: `{}`\nAges: `{}`'.format(na(data.location), na(data.price), na(data.ages))
-        embed.add_field(name=":grey_question: __Info__", value=info, inline=True)
+        embed.add_field(name=":grey_question: __Info__", value=info, inline=False)
 
         embed.set_footer(text="Powered by 19hz.info", icon_url=c.ICON_URL)
         return embed

@@ -5,7 +5,7 @@ from config import IS_BOT
 
 import traceback
 from datetime import datetime
-from random import seed
+from random import seed, uniform
 
 description = '''Serves events via 19hz.info'''
 
@@ -54,10 +54,21 @@ async def ti():
     Usage: !ti
     '''
     now = datetime.now()
-    print(now)
     return await infobot.say("Server time is %s:%s:%s PST  %s/%s/%s"
                            % (now.hour, now.minute, now.second, now.month,
                               now.day, now.year), delete_after=10)
+
+@infobot.command()
+async def rate(*args):
+    '''
+    Display the bot's time (PST)
+    Usage: !ti
+    '''
+    if args:
+        s = ' '.join(args)
+        seed(s)
+        number = round(uniform(1, 8), 1)
+        return await infobot.say("Gr8 m8 I rate {}/8".format(number))
 
 if __name__ == "__main__":
     for extension in startup_extensions:
