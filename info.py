@@ -91,8 +91,8 @@ class Info():
 
         best = process.extractOne(concat, c.DATA_SHORT)
         if best[1] < .50:
-            cities = ", ".join(c.DATA_SHORT)
-            text = "`{}` didn't match with anything\nTry one of these cities:\n`{}`".format(best[0], cities)
+            locations = ", ".join(c.DATA_SHORT)
+            text = "`{}` didn't match with anything\nTry one of these locations:\n`{}`".format(best[0], locations)
             await self.bot.say(text)
             return
 
