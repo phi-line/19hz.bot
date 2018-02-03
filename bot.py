@@ -1,18 +1,19 @@
 import discord
 from discord.ext import commands
 import secrets
-from config import IS_BOT
+from config import IS_BOT, OWNER
 
 import traceback
 from datetime import datetime
-from random import seed, uniform
+from random import seed
 
 description = '''Serves events via 19hz.info'''
 
 # this specifies what extensions to load when the infobot starts up
-startup_extensions = ["info"]
+startup_extensions = ["info", "misc"]
 
 infobot = commands.Bot(command_prefix='>', description=description)
+
 
 @infobot.event
 async def on_ready():
@@ -22,53 +23,48 @@ async def on_ready():
     print('Servers: ' + ', '.join([str(s) for s in infobot.servers]))
     print('------')
 
+
 @infobot.event
 async def on_command(s, e):
     print("{0.name} used >{1} in {2.name} (Channel #{3})".format(e.message.author,s,e.message.server,e.message.channel))
 
+
 @infobot.event
-async def on_command_error(error,ctx):
+async def on_command_error(error, ctx):
     tb = "\n".join(traceback.format_tb(error.original.__traceback__))
     print("{}: {}\n{}".format(error.original.__class__.__name__,str(error),str(tb)))
 
-@infobot.command()
-async def load(extension_name : str):
+
+@infobot.command(pass_context=True)
+async def load(extension_name : str, ctx):
     """Loads an extension."""
-    try:
-        infobot.load_extension(extension_name)
-    except (AttributeError, ImportError) as e:
-        await infobot.say("```py\n{}: {}\n```".format(type(e).__name__, str(e)))
-        return
-    await infobot.say("{} loaded.".format(extension_name))
+    if ctx.message.name == OWNER:
+        try:
+            infobot.load_extension(extension_name)
+        except (AttributeError, ImportError) as e:
+            await infobot.say("```py\n{}: {}\n```".format(type(e).__name__, str(e)))
+            return
+        await infobot.say("{} loaded.".format(extension_name))
 
-@infobot.command()
-async def unload(extension_name : str):
+
+@infobot.command(pass_context=True)
+async def unload(extension_name : str, ctx):
     """Unloads an extension."""
-    infobot.unload_extension(extension_name)
-    await infobot.say("{} unloaded.".format(extension_name))
+    if ctx.message.name == OWNER:
+        infobot.unload_extension(extension_name)
+        await infobot.say("{} unloaded.".format(extension_name))
 
-@infobot.command()
-async def ti():
+
+@infobot.command(pass_context=True)
+async def ping():
     '''
     Display the bot's time (PST)
-    Usage: !ti
+    Usage: !ping
     '''
     now = datetime.now()
     return await infobot.say("Server time is %s:%s:%s PST  %s/%s/%s"
                            % (now.hour, now.minute, now.second, now.month,
                               now.day, now.year), delete_after=10)
-
-@infobot.command()
-async def rate(*args):
-    '''
-    Display the bot's time (PST)
-    Usage: !ti
-    '''
-    if args:
-        s = ' '.join(args)
-        seed(s)
-        number = round(uniform(1, 8), 1)
-        return await infobot.say("Gr8 m8 I rate {}/8".format(number))
 
 if __name__ == "__main__":
     for extension in startup_extensions:

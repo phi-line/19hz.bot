@@ -21,7 +21,7 @@ class dotdict(dict):
 
 
 class Color(object):
-    LIST = [0xffd6d6, 0xffdfba, 0xffffba, 0xbaffc9, 0xbae1ff, 0xeccdfa]
+    LIST = [0xff3352, 0xf9d814, 0x7ae576, 0xbaffc9, 0x7fa0fb, 0xae86d8]
 
     def __init__(self):
         self.idx = 0
