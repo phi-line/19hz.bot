@@ -14,6 +14,8 @@ startup_extensions = ["info", "misc"]
 
 infobot = commands.Bot(command_prefix='>', description=description)
 
+def is_owner():
+    return commands.check(lambda ctx: ctx.message.author.id == OWNER)
 
 @infobot.event
 async def on_ready():
@@ -36,6 +38,7 @@ async def on_command_error(error, ctx):
 
 
 @infobot.command(pass_context=True)
+@is_owner()
 async def load(extension_name : str, ctx):
     """Loads an extension."""
     if ctx.message.name == OWNER:
@@ -48,6 +51,7 @@ async def load(extension_name : str, ctx):
 
 
 @infobot.command(pass_context=True)
+@is_owner()
 async def unload(extension_name : str, ctx):
     """Unloads an extension."""
     if ctx.message.name == OWNER:

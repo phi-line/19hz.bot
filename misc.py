@@ -15,10 +15,15 @@ class Misc():
         Usage: !rate
         '''
         if args:
-            s = ' '.join(args)
+            s = ' '.join(args).lower()
             seed(s)
             number = round(uniform(1, 8), 1)
-            return await self.say("Gr8 m8 I rate {}/8".format(number))
+            return await self.bot.say("Gr8 m8 I rate {}/8".format(number))
+
+    @commands.command()
+    async def pussyhacks(self):
+        pass
+
 
 
 def setup(bot):
