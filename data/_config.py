@@ -9,8 +9,9 @@ DATA_HEADERS = ["date", "name", "genre", 'location', 'time', 'price',
 ICON_URL = "https://raw.githubusercontent.com/phi-line/19hz.bot/master/logo.png"
 
 DATA_ALIAS = {'BayArea':['bay', 'area', 'ba', 'b', 'sanfrancisco', 'sanfran',
-                         'san', 'francisco' 'sf', 'oakland', 'oak', 'san jose', 'sj'],
-              'LosAngeles':['la', 'los', 'angeles', 'hell'],
+                         'san', 'francisco' 'sf', 'oakland', 'oak', 'san jose', 'sj',
+                         'berkeley', 'norcal', 'northern california'],
+              'LosAngeles':['la', 'los', 'angeles', 'hell', 'socal', 'southern california'],
               'Atlanta':['bacon', 'georgia'],
               'Texas':['houston', 'austin'],
               'Miami':['florida'],
